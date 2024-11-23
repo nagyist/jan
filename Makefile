@@ -5,17 +5,21 @@ REPORT_PORTAL_API_KEY ?= ""
 REPORT_PORTAL_PROJECT_NAME ?= ""
 REPORT_PORTAL_LAUNCH_NAME ?= "Jan App"
 REPORT_PORTAL_DESCRIPTION ?= "Jan App report"
-
 # Default target, does nothing
 all:
 	@echo "Specify a target to run"
 
+link:
+	cd core && bun link || yarn link
+	cd joi && bun link || yarn link
+	cd server && bun link || yarn link
+
 # Builds the UI kit
-build-joi:
+build-joi: link
 ifeq ($(OS),Windows_NT)
-	cd joi && yarn config set network-timeout 300000 && yarn install && yarn build
+	cd joi && yarn config set network-timeout 300000 && (bun install --force || yarn install) && yarn build
 else
-	cd joi && yarn install && yarn build
+	cd joi && (bun install --force || yarn install) && yarn build
 endif
 
 # Installs yarn dependencies and builds core and extensions
@@ -26,7 +30,7 @@ endif
 	yarn global add turbo@1.13.2
 	yarn build:core
 	yarn build:server
-	yarn install
+	bun install --force || yarn install
 	yarn build:extensions
 
 check-file-counts: install-and-build
@@ -117,9 +121,10 @@ build: check-file-counts
 
 clean:
 ifeq ($(OS),Windows_NT)
-	-powershell -Command "Get-ChildItem -Path . -Include node_modules, .next, dist, build, out, .turbo -Recurse -Directory | Remove-Item -Recurse -Force"
-	-powershell -Command "Get-ChildItem -Path . -Include package-lock.json -Recurse -File | Remove-Item -Recurse -Force"
-	-powershell -Command "Get-ChildItem -Path . -Include yarn.lock -Recurse -File | Remove-Item -Recurse -Force"
+	-powershell -Command "Get-ChildItem -Path ., .\extensions\* -Include node_modules, .next, dist, build, out, .turbo -Directory -Depth 1 | Remove-Item -Recurse -Force"
+	-powershell -Command "Get-ChildItem -Path ., .\extensions\* -Include package-lock.json -Depth 1 -File | Remove-Item -Force"
+	-powershell -Command "Get-ChildItem -Path ., .\extensions\* -Include yarn.lock -Depth 1 -File | Remove-Item -Force"
+	-powershell -Command "Get-ChildItem -Path ., .\extensions\* -Include bun.lockb -Depth 1 -File | Remove-Item -Force"
 	-powershell -Command "Remove-Item -Recurse -Force ./pre-install/*.tgz"
 	-powershell -Command "Remove-Item -Recurse -Force ./extensions/*/*.tgz"
 	-powershell -Command "Remove-Item -Recurse -Force ./electron/pre-install/*.tgz"

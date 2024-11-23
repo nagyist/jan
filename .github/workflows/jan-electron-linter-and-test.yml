@@ -190,7 +190,7 @@ jobs:
         #   TURBO_TEAM: 'windows'
         #   TURBO_TOKEN: '${{ secrets.TURBO_TOKEN }}'
   test-on-windows-pr:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'workflow_dispatch'
     runs-on: windows-desktop-default-windows-security
     steps:
       - name: Getting the repo
@@ -226,6 +226,11 @@ jobs:
         shell: bash
         run: |
           make update-playwright-config REPORT_PORTAL_URL=${{ secrets.REPORT_PORTAL_URL }} REPORT_PORTAL_API_KEY=${{ secrets.REPORT_PORTAL_API_KEY }} REPORT_PORTAL_PROJECT_NAME=${{ secrets.REPORT_PORTAL_PROJECT_NAME }} REPORT_PORTAL_LAUNCH_NAME="Jan App Windows" REPORT_PORTAL_DESCRIPTION="${{env.REPORT_PORTAL_DESCRIPTION}}"
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Linter and test
         shell: powershell

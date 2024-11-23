@@ -48,3 +48,4 @@ coverage
 test_results.html
 *.tsbuildinfo
 electron/shared/**
+*.lockb
