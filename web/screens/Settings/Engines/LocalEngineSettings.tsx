@@ -11,6 +11,7 @@ import { Button, ScrollArea, Badge, Select, Progress } from '@janhq/joi'
 
 import { twMerge } from 'tailwind-merge'
 
+import { useActiveModel } from '@/hooks/useActiveModel'
 import {
   useGetDefaultEngineVariant,
   useGetInstalledEngines,
@@ -52,6 +53,7 @@ const LocalEngineSettings = ({ engine }: { engine: InferenceEngine }) => {
   const [installingEngines, setInstallingEngines] = useState<
     Map<string, number>
   >(new Map())
+  const { stopModel } = useActiveModel()
 
   const isEngineUpdated =
     latestReleasedEngine &&
@@ -103,7 +105,8 @@ const LocalEngineSettings = ({ engine }: { engine: InferenceEngine }) => {
   }, [defaultEngineVariant])
 
   const handleEngineUpdate = useCallback(
-    (event: { id: string; type: DownloadEvent; percent: number }) => {
+    async (event: { id: string; type: DownloadEvent; percent: number }) => {
+      await stopModel().catch(console.info)
       mutateInstalledEngines()
       mutateDefaultEngineVariant()
       // Backward compatible support - cortex.cpp returns full variant file name
@@ -138,6 +141,7 @@ const LocalEngineSettings = ({ engine }: { engine: InferenceEngine }) => {
       })
     },
     [
+      stopModel,
       mutateDefaultEngineVariant,
       mutateInstalledEngines,
       setInstallingEngines,
@@ -152,7 +156,8 @@ const LocalEngineSettings = ({ engine }: { engine: InferenceEngine }) => {
     }
   }, [handleEngineUpdate])
 
-  const handleChangeVariant = (e: string) => {
+  const handleChangeVariant = async (e: string) => {
+    await stopModel().catch(console.info)
     setSelectedVariants(e)
     setDefaultEngineVariant(engine, {
       variant: e,
@@ -217,8 +222,14 @@ const LocalEngineSettings = ({ engine }: { engine: InferenceEngine }) => {
                   <div className="mt-2 w-full font-medium leading-relaxed text-[hsla(var(--text-secondary))]">
                     <p>
                       Choose the default variant that best suited for your
-                      hardware. See [our
-                      guides](https://jan.ai/docs/local-engines/llama-cpp).
+                      hardware. See&nbsp;
+                      <a
+                        href="https://jan.ai/docs/local-engines/llama-cpp"
+                        className="cursor-pointer text-blue-600 dark:text-blue-400"
+                        target="_blank"
+                      >
+                        our guides.
+                      </a>
                     </p>
                   </div>
                 </div>
